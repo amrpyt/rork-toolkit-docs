@@ -1,0 +1,497 @@
+{
+	"info": {
+		"_postman_id": "rork-toolkit-api-collection",
+		"name": "Rork Toolkit API Collection",
+		"description": "Complete API collection for Rork Toolkit AI endpoints\n\n**Setup Instructions:**\n1. Set environment variable `RORK_BASE_URL` = `https://toolkit.rork.com`\n2. For Agent Chat, set `EXPO_PUBLIC_TOOLKIT_URL` = `https://toolkit.rork.com`\n3. Replace `{{base64_image_clean}}` with actual base64 string (WITHOUT data URI prefix)\n4. Replace `{{audio_file}}` with actual audio file for STT\n\n**Important Notes:**\n- Images must be base64 encoded WITHOUT `data:image/jpeg;base64,` prefix\n- STT endpoint uses multipart/form-data (Postman handles automatically)\n- No API key required - authentication is platform-managed",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Text LLM with Vision (Primary)",
+			"item": [
+				{
+					"name": "Text Only Generation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Generate a creative story about a robot learning to paint\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/text/llm/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"text",
+								"llm",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Image Analysis + JSON Output",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Analyze this meal image and return nutrition info as JSON with fields: name, calories, protein, carbs, fats, description\"\n        },\n        {\n          \"type\": \"image\",\n          \"image\": \"{{base64_image_clean}}\"\n        }\n      ]\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/text/llm/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"text",
+								"llm",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "With Optional Parameters",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful AI assistant specialized in creative writing.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Write a short poem about technology and nature\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 200,\n  \"top_p\": 0.9\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/text/llm/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"text",
+								"llm",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Agent Chat (SDK-oriented)",
+			"item": [
+				{
+					"name": "Simple Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"id\": \"msg_001\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Hello, how can you help me today?\"\n        }\n      ]\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{EXPO_PUBLIC_TOOLKIT_URL}}/agent/chat",
+							"host": [
+								"{{EXPO_PUBLIC_TOOLKIT_URL}}"
+							],
+							"path": [
+								"agent",
+								"chat"
+							]
+						}
+					}
+				},
+				{
+					"name": "Chat with Tools",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"id\": \"msg_001\",\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Add a todo to buy groceries\"\n        }\n      ]\n    }\n  ],\n  \"tools\": {\n    \"addTodo\": {\n      \"description\": \"Add a new todo item to the list\",\n      \"parameters\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": {\n            \"type\": \"string\",\n            \"description\": \"Title of the todo item\"\n          },\n          \"priority\": {\n            \"type\": \"string\",\n            \"enum\": [\"low\", \"medium\", \"high\"],\n            \"description\": \"Priority level of the todo\"\n          },\n          \"dueDate\": {\n            \"type\": \"string\",\n            \"description\": \"Due date in YYYY-MM-DD format\"\n          }\n        },\n        \"required\": [\"title\"]\n      }\n    }\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{EXPO_PUBLIC_TOOLKIT_URL}}/agent/chat",
+							"host": [
+								"{{EXPO_PUBLIC_TOOLKIT_URL}}"
+							],
+							"path": [
+								"agent",
+								"chat"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Image Generation",
+			"item": [
+				{
+					"name": "Generate Image - Standard",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"prompt\": \"A photorealistic image of a healthy breakfast bowl with oats, fresh berries, and nuts on a wooden table\",\n  \"size\": \"1024x1024\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/images/generate/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"images",
+								"generate",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate Image - Different Size",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"prompt\": \"A modern minimalist logo for a tech startup, clean lines, blue and white colors\",\n  \"size\": \"512x512\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/images/generate/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"images",
+								"generate",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Image Editing",
+			"item": [
+				{
+					"name": "Edit Image - Enhance Colors",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"prompt\": \"Enhance the colors and contrast of this image, make it more vibrant and professional-looking\",\n  \"images\": [\n    {\n      \"type\": \"image\",\n      \"image\": \"{{base64_image_clean}}\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/images/edit/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"images",
+								"edit",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Edit Image - Background Removal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"prompt\": \"Remove the background from this image and make it transparent\",\n  \"images\": [\n    {\n      \"type\": \"image\",\n      \"image\": \"{{base64_image_clean}}\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/images/edit/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"images",
+								"edit",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Speech-to-Text (STT)",
+			"item": [
+				{
+					"name": "Transcribe Audio - Auto Language",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "audio",
+									"description": "Audio file to transcribe (mp3, mp4, mpeg, mpga, m4a, wav, webm)",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/stt/transcribe/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"stt",
+								"transcribe",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Transcribe Audio - Specific Language",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "audio",
+									"description": "Audio file to transcribe",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "language",
+									"value": "en",
+									"description": "Language code (e.g., en, ar, es, fr)",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/stt/transcribe/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"stt",
+								"transcribe",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Error Testing",
+			"item": [
+				{
+					"name": "Test 400 - Malformed JSON",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ invalid json here",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/text/llm/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"text",
+								"llm",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Test 413 - Large Payload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Analyze this huge image\"\n        },\n        {\n          \"type\": \"image\",\n          \"image\": \"{{extremely_large_base64_image}}\"\n        }\n      ]\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{RORK_BASE_URL}}/text/llm/",
+							"host": [
+								"{{RORK_BASE_URL}}"
+							],
+							"path": [
+								"text",
+								"llm",
+								""
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Helper function to clean base64 images",
+					"function cleanBase64(dataUri) {",
+					"  return dataUri.replace(/^data:.*?;base64,/, '');",
+					"}",
+					"",
+					"// Set cleaned base64 if raw version exists",
+					"if (pm.environment.get('base64_image_raw')) {",
+					"  const cleaned = cleanBase64(pm.environment.get('base64_image_raw'));",
+					"  pm.environment.set('base64_image_clean', cleaned);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "RORK_BASE_URL",
+			"value": "https://toolkit.rork.com",
+			"type": "string"
+		},
+		{
+			"key": "EXPO_PUBLIC_TOOLKIT_URL",
+			"value": "https://toolkit.rork.com",
+			"type": "string"
+		}
+	]
+}
