@@ -1,0 +1,722 @@
+openapi: 3.1.0
+info:
+  title: Rork Toolkit API
+  version: 1.0.0-unofficial
+  summary: Unofficial evidence-based contract for Rork Toolkit endpoints
+  description: |
+    This specification is not published or guaranteed by Rork. It combines
+    Rork's public documentation, the published @rork-ai/toolkit-sdk package,
+    and black-box measurements performed in July 2026.
+
+    The service is not OpenAI-compatible. In particular, /agent/chat emits
+    Vercel AI SDK UI Message Stream v1 frames rather than OpenAI SSE chunks.
+  contact:
+    url: https://github.com/amrpyt/rork-toolkit-docs
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://toolkit.rork.com
+    description: Measured production endpoint
+
+security: []
+
+tags:
+  - name: Text
+    description: Current single-shot text and vision generation.
+  - name: Object
+    description: Current structured object generation with required local validation.
+  - name: Agent
+    description: Vercel AI SDK UI Message Stream v1 agent and tool calling.
+  - name: Images
+    description: Image generation and image editing endpoints.
+  - name: Speech
+    description: Speech-to-text transcription.
+  - name: Legacy
+    description: Older endpoints retained only for compatibility research.
+  - name: Connections
+    description: Integration connection flows discovered in the published SDK.
+
+paths:
+  /llm/text:
+    post:
+      tags: [Text]
+      operationId: generateText
+      summary: Generate a single text completion
+      description: |
+        Current endpoint used by the published SDK. The measured response is
+        `{ "completion": "..." }`. Request options such as model, stream,
+        max_tokens, and providerOptions must not be assumed to work merely
+        because the server accepts them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextRequest'
+            examples:
+              minimal:
+                value:
+                  messages:
+                    - role: user
+                      content: Reply exactly OK
+              vision:
+                value:
+                  messages:
+                    - role: user
+                      content:
+                        - type: text
+                          text: Read the order ID
+                        - type: image
+                          image: data:image/png;base64,...
+      responses:
+        '200':
+          description: Text completion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /llm/object:
+    post:
+      tags: [Object]
+      operationId: generateObject
+      summary: Generate a structured object
+      description: |
+        Current endpoint used by the published SDK. The SDK converts a Zod
+        schema to JSON Schema, sends it as `schema`, then validates the returned
+        `object` locally. Local validation is mandatory because measurements
+        showed that missing or invalid schemas can still receive HTTP 200.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectRequest'
+      responses:
+        '200':
+          description: Generated object. Validate it locally.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /agent/chat:
+    post:
+      tags: [Agent]
+      operationId: chatWithAgent
+      summary: Stream an agent response with optional tool calling
+      description: |
+        Emits Vercel AI SDK UI Message Stream v1 frames. The measured response
+        uses `Content-Type: application/octet-stream` and includes the header
+        `X-Vercel-Ai-UI-Message-Stream: v1`.
+
+        Tool definitions use Rork's external `jsonSchema` field, not OpenAI's
+        `parameters` wrapper and not AI SDK's internal `inputSchema` name.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+      responses:
+        '200':
+          description: Vercel AI SDK UI Message Stream v1
+          headers:
+            X-Vercel-Ai-UI-Message-Stream:
+              schema:
+                type: string
+                const: v1
+            X-Accel-Buffering:
+              schema:
+                type: string
+                const: no
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                description: SSE-style `data:` frames ending with `[DONE]`.
+              examples:
+                text:
+                  value: |
+                    data: {"type":"start"}
+
+                    data: {"type":"start-step"}
+
+                    data: {"type":"text-start","id":"gen-1"}
+
+                    data: {"type":"text-delta","id":"gen-1","delta":"Hello"}
+
+                    data: {"type":"text-end","id":"gen-1"}
+
+                    data: {"type":"finish-step"}
+
+                    data: {"type":"finish","finishReason":"stop"}
+
+                    data: [DONE]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /images/generate/:
+    post:
+      tags: [Images]
+      operationId: generateImage
+      summary: Generate an image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageGenerateRequest'
+      responses:
+        '200':
+          description: Generated image encoded in JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /images/edit/:
+    post:
+      tags: [Images]
+      operationId: editImage
+      summary: Edit one or more images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageEditRequest'
+      responses:
+        '200':
+          description: Edited image encoded in JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /stt/transcribe/:
+    post:
+      tags: [Speech]
+      operationId: transcribeAudio
+      summary: Transcribe an uploaded audio file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [audio]
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: The field name must be `audio`.
+                language:
+                  type: string
+                  description: Accepted in some tests but not shown to be reliable.
+      responses:
+        '200':
+          description: Transcription result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /text/llm/:
+    post:
+      tags: [Legacy]
+      operationId: legacyGenerateText
+      deprecated: true
+      summary: Legacy text and vision endpoint
+      description: |
+        This endpoint still worked during testing but is not used by the
+        published SDK version inspected. New integrations should use /llm/text
+        or /agent/chat.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextRequest'
+      responses:
+        '200':
+          description: Legacy completion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /connections/list:
+    get:
+      tags: [Connections]
+      operationId: listConnections
+      summary: List integration connections
+      description: Discovered in the published SDK; not deeply black-box tested.
+      responses:
+        '200':
+          description: Connection list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Connection'
+                required: [connections]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /connection/init/{toolkit}:
+    get:
+      tags: [Connections]
+      operationId: initiateConnection
+      summary: Start an integration connection flow
+      parameters:
+        - $ref: '#/components/parameters/ToolkitName'
+      responses:
+        '200':
+          description: Redirect information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirectUrl:
+                    type: string
+                    format: uri
+                required: [redirectUrl]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /connection/wait/{id}:
+    get:
+      tags: [Connections]
+      operationId: waitForConnection
+      summary: Poll connection status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connection status response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /connection/disconnect/{toolkit}:
+    get:
+      tags: [Connections]
+      operationId: disconnectConnection
+      summary: Disconnect an integration
+      parameters:
+        - $ref: '#/components/parameters/ToolkitName'
+      responses:
+        '200':
+          description: Disconnect result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required: [status]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    ToolkitName:
+      name: toolkit
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request body or validation failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+        text/plain:
+          schema:
+            type: string
+    PayloadTooLarge:
+      description: Request exceeded the hosting payload limit
+      content:
+        text/plain:
+          schema:
+            type: string
+    InternalError:
+      description: Upstream or application error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    TextRequest:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TextModelMessage'
+      additionalProperties: true
+
+    TextResponse:
+      type: object
+      required: [completion]
+      properties:
+        completion:
+          type: string
+      additionalProperties: true
+
+    TextModelMessage:
+      oneOf:
+        - $ref: '#/components/schemas/SystemMessage'
+        - $ref: '#/components/schemas/UserMessage'
+        - $ref: '#/components/schemas/AssistantMessage'
+
+    SystemMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          const: system
+        content:
+          type: string
+      additionalProperties: true
+
+    UserMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          const: user
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/TextPart'
+                  - $ref: '#/components/schemas/ImagePart'
+      additionalProperties: true
+
+    AssistantMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          const: assistant
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/TextPart'
+      additionalProperties: true
+
+    TextPart:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          const: text
+        text:
+          type: string
+      additionalProperties: true
+
+    ImagePart:
+      type: object
+      required: [type, image]
+      properties:
+        type:
+          type: string
+          const: image
+        image:
+          type: string
+          description: Raw Base64 or a data URI; both worked in measurements.
+      additionalProperties: true
+
+    ObjectRequest:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/UserMessage'
+              - $ref: '#/components/schemas/AssistantMessage'
+        schema:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    ObjectResponse:
+      type: object
+      required: [object]
+      properties:
+        object: {}
+      additionalProperties: true
+
+    AgentRequest:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UIMessage'
+        tools:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RorkToolDefinition'
+      additionalProperties: true
+
+    UIMessage:
+      type: object
+      required: [id, role, parts]
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [system, user, assistant]
+        parts:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/UITextPart'
+              - $ref: '#/components/schemas/UIFilePart'
+              - $ref: '#/components/schemas/UIToolPart'
+        metadata: {}
+      additionalProperties: true
+
+    UITextPart:
+      type: object
+      required: [type, text]
+      properties:
+        type:
+          type: string
+          const: text
+        text:
+          type: string
+      additionalProperties: true
+
+    UIFilePart:
+      type: object
+      required: [type, mediaType, url]
+      properties:
+        type:
+          type: string
+          const: file
+        mediaType:
+          type: string
+          examples: [image/png]
+        url:
+          type: string
+          description: A data URI worked in measurements.
+      additionalProperties: true
+
+    UIToolPart:
+      type: object
+      required: [type, toolCallId, state, input]
+      properties:
+        type:
+          type: string
+          pattern: '^tool-.+$'
+        toolCallId:
+          type: string
+        state:
+          type: string
+          enum: [input-streaming, input-available, output-available, output-error]
+        input: {}
+        output: {}
+        errorText:
+          type: string
+      additionalProperties: true
+
+    RorkToolDefinition:
+      type: object
+      required: [description, jsonSchema]
+      properties:
+        description:
+          type: string
+        jsonSchema:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+
+    ImageGenerateRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        size:
+          type: string
+          description: Accepted but not shown to be a strict output-size control.
+        aspectRatio:
+          type: string
+        model:
+          type: string
+          description: Accepted in tests but not shown to control the model.
+      additionalProperties: true
+
+    ImageEditRequest:
+      type: object
+      required: [prompt, images]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        images:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [type, image]
+            properties:
+              type:
+                type: string
+                const: image
+              image:
+                type: string
+            additionalProperties: true
+      additionalProperties: true
+
+    ImageResponse:
+      type: object
+      required: [image]
+      properties:
+        image:
+          type: object
+          properties:
+            base64Data:
+              type: string
+            base64:
+              type: string
+            mimeType:
+              type: string
+          additionalProperties: true
+        aspectRatio:
+          oneOf:
+            - type: string
+            - type: number
+      additionalProperties: true
+
+    TranscriptionResponse:
+      type: object
+      required: [text, language]
+      properties:
+        text:
+          type: string
+        language:
+          type: string
+      additionalProperties: true
+
+    Connection:
+      type: object
+      required: [id, status, toolkit]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [INITIALIZING, INITIATED, ACTIVE, FAILED, EXPIRED, INACTIVE]
+        toolkit:
+          type: string
+      additionalProperties: true
+
+    ErrorIssue:
+      type: object
+      properties:
+        expected: {}
+        code:
+          type: string
+        path:
+          type: array
+          items: {}
+        message:
+          type: string
+      additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: true
+        success:
+          type: boolean
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorIssue'
+      additionalProperties: true
