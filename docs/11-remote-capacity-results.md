@@ -9,10 +9,15 @@
 
 - [Stage 1 — baseline and concurrency to 32](https://github.com/amrpyt/API-interface/actions/runs/29712574240)
 - [Stage 2 — concurrency to 96 and tool edge cases](https://github.com/amrpyt/API-interface/actions/runs/29712666297)
+- [Stage 3 — dedicated remote-test repository validation](https://github.com/amrpyt/rork-toolkit-remote-tests/actions/runs/29712865645)
+
+Dedicated harness repository:
+
+- [amrpyt/rork-toolkit-remote-tests](https://github.com/amrpyt/rork-toolkit-remote-tests)
 
 ## Egress IPs
 
-Six separate GitHub-hosted jobs used six distinct public egress IPs:
+Nine separate GitHub-hosted jobs used nine distinct public egress IPs:
 
 | Run | Python job | Egress IP |
 |---|---:|---|
@@ -22,14 +27,17 @@ Six separate GitHub-hosted jobs used six distinct public egress IPs:
 | Stage 2 | 3.9 | `172.172.157.1` |
 | Stage 2 | 3.10 | `20.64.206.181` |
 | Stage 2 | 3.11 | `68.154.54.34` |
+| Stage 3 | 3.9 | `20.163.32.235` |
+| Stage 3 | 3.10 | `52.160.165.48` |
+| Stage 3 | 3.11 | `51.8.152.227` |
 
 ## Aggregate result
 
-Across both stages, the runners sent **482 measured agent requests**.
+Across the three successful runs, the runners sent **846 measured agent requests**.
 
 | Metric | Result |
 |---|---:|
-| HTTP `200` for measured requests | 482 |
+| HTTP `200` for measured requests | 846 |
 | HTTP `429` | 0 |
 | HTTP `5xx` | 0 |
 | Authentication required | No |
@@ -99,8 +107,8 @@ A tool output containing **64,429 characters** was accepted. The endpoint return
 
 The measured endpoint successfully handled:
 
-- Six different public GitHub runner IPs.
-- 482 agent requests across two runs.
+- Nine different public GitHub runner IPs.
+- 846 agent requests across three successful runs.
 - A burst of 96 simultaneous requests with 96/96 success.
 - A 120-request wave at concurrency 16 with 120/120 success.
 - Parallel tool calls.

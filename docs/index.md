@@ -7,7 +7,7 @@
 - الـSDK الرسمي الحالي يستخدم `/llm/text` و`/llm/object` و`/agent/chat`.
 - `/agent/chat` مبني مباشرة على Vercel AI SDK client primitives ويستخدم UI Message Stream v1.
 - Tool Calling يعمل فعليًا، بما يشمل Tool Input وTool Result round-trip.
-- تم تنفيذ 482 طلبًا من ستة عناوين IP مختلفة، حتى 96 طلبًا متزامنًا، دون `429` أو `5xx`.
+- تم تنفيذ 846 طلبًا من تسعة عناوين IP مختلفة، حتى 96 طلبًا متزامنًا، دون `429` أو `5xx`.
 - `/text/llm/` مسار Legacy ما زال يعمل لكنه ليس المسار الحالي في الـSDK المنشور.
 - Rork ليس OpenAI-compatible API.
 - لا يوجد Embeddings endpoint مكتشف حتى تاريخ الاختبار.

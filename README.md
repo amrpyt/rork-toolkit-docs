@@ -3,7 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://amrpyt.github.io/rork-toolkit-docs/)
 [![Evidence](https://img.shields.io/badge/evidence-official%20%2B%20SDK%20%2B%20measured-brightgreen)](./docs/10-sources-and-confidence.md)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1-orange)](./openapi/rork-toolkit-unofficial.yaml)
-[![Remote tests](https://img.shields.io/badge/remote%20tests-482%20requests%20%7C%2096%20concurrent-success)](./docs/11-remote-capacity-results.md)
+[![Remote tests](https://img.shields.io/badge/remote%20tests-846%20requests%20%7C%2096%20concurrent-success)](./docs/11-remote-capacity-results.md)
 
 مرجع هندسي غير رسمي لـ **Rork Toolkit API**، مبني على:
 

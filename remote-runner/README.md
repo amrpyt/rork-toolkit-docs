@@ -2,6 +2,10 @@
 
 This directory contains the exact Python test harness used for the remote Rork Toolkit measurements.
 
+Dedicated runnable repository:
+
+https://github.com/amrpyt/rork-toolkit-remote-tests
+
 ## Files
 
 - `test_rork_remote.py` — standard-library-only Pytest suite.
@@ -9,7 +13,7 @@ This directory contains the exact Python test harness used for the remote Rork T
 
 ## Execution environment
 
-The harness was copied to `amrpyt/API-interface`, whose existing GitHub Actions matrix runs it on three separate GitHub-hosted Ubuntu jobs:
+The harness runs in `amrpyt/rork-toolkit-remote-tests` using a GitHub Actions matrix with three separate GitHub-hosted Ubuntu jobs:
 
 ```text
 Python 3.9
