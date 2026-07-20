@@ -30,6 +30,7 @@ nav:
   - الأمن والإنتاج: 08-security-production.md
   - مصفوفة الاختبارات: 09-test-matrix.md
   - المصادر ودرجات الثقة: 10-sources-and-confidence.md
+  - اختبارات Remote والقدرة: 11-remote-capacity-results.md
 
 markdown_extensions:
   - admonition

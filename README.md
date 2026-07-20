@@ -3,6 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://amrpyt.github.io/rork-toolkit-docs/)
 [![Evidence](https://img.shields.io/badge/evidence-official%20%2B%20SDK%20%2B%20measured-brightgreen)](./docs/10-sources-and-confidence.md)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1-orange)](./openapi/rork-toolkit-unofficial.yaml)
+[![Remote tests](https://img.shields.io/badge/remote%20tests-482%20requests%20%7C%2096%20concurrent-success)](./docs/11-remote-capacity-results.md)
 
 مرجع هندسي غير رسمي لـ **Rork Toolkit API**، مبني على:
 
@@ -72,6 +73,7 @@ POST https://toolkit.rork.com/agent/chat
 - [الأمن والاستعداد للإنتاج](./docs/08-security-production.md)
 - [مصفوفة الاختبارات](./docs/09-test-matrix.md)
 - [المصادر ودرجات الثقة](./docs/10-sources-and-confidence.md)
+- [نتائج الاختبارات من IPs منفصلة](./docs/11-remote-capacity-results.md)
 
 ## Quick start
 
@@ -149,7 +151,8 @@ Rork /agent/chat
 - **Canonical docs:** `docs/`
 - **OpenAPI:** `openapi/rork-toolkit-unofficial.yaml`
 - **Examples:** `examples/`
-- **Last measured:** 19 July 2026
+- **Last measured:** 20 July 2026
+- **Remote harness:** `remote-runner/`
 - **Documentation revision:** 20 July 2026
 
 ## License and disclaimer

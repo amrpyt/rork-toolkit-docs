@@ -7,6 +7,7 @@
 - الـSDK الرسمي الحالي يستخدم `/llm/text` و`/llm/object` و`/agent/chat`.
 - `/agent/chat` مبني مباشرة على Vercel AI SDK client primitives ويستخدم UI Message Stream v1.
 - Tool Calling يعمل فعليًا، بما يشمل Tool Input وTool Result round-trip.
+- تم تنفيذ 482 طلبًا من ستة عناوين IP مختلفة، حتى 96 طلبًا متزامنًا، دون `429` أو `5xx`.
 - `/text/llm/` مسار Legacy ما زال يعمل لكنه ليس المسار الحالي في الـSDK المنشور.
 - Rork ليس OpenAI-compatible API.
 - لا يوجد Embeddings endpoint مكتشف حتى تاريخ الاختبار.
@@ -21,6 +22,7 @@
 | ربطه مع Chatwoot | [Chatwoot Adapter](07-chatwoot-captain-adapter.md) |
 | معرفة المخاطر | [الأمن والإنتاج](08-security-production.md) |
 | مراجعة ما تم اختباره فعلًا | [مصفوفة الاختبارات](09-test-matrix.md) |
+| مراجعة اختبارات IPs منفصلة والقدرة | [نتائج Remote](11-remote-capacity-results.md) |
 
 ## Base URL
 
